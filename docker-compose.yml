@@ -5,8 +5,6 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   backend:
     build: ./backend
@@ -20,6 +18,8 @@ services:
   frontend:
     build: ./frontend
     restart: unless-stopped
+    ports:
+      - "3000:80"
 
   tg-bot:
     build: ./tg-bot
@@ -31,21 +31,14 @@ services:
   tg-webapp:
     build: ./tg-bot/webapp
     restart: unless-stopped
+    ports:
+      - "3001:80"
 
   tablet:
     build: ./tablet
     restart: unless-stopped
-
-  nginx:
-    build: ./nginx
-    restart: unless-stopped
     ports:
-      - "80:80"
-    depends_on:
-      - backend
-      - frontend
-      - tg-webapp
-      - tablet
+      - "3002:80"
 
 volumes:
   postgres_data:
