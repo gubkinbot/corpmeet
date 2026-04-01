@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(npm run*)",
+      "Bash(npm test*)",
+      "Bash(npm install*)",
+      "Bash(pytest*)",
+      "Bash(docker compose*)"
+    ]
+  }
+}
