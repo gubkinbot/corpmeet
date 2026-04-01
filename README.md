@@ -13,7 +13,7 @@
 | Адрес | Что показывает | Папка |
 |-------|---------------|-------|
 | https://corpmeet.uz | Основной сайт | `frontend/` |
-| https://corpmeet.uz/api/ | API (документация: `/api/docs`) | `backend/` |
+| https://corpmeet.uz/api/docs | API документация (Swagger) | `backend/` |
 | https://tg.corpmeet.uz | Telegram Web App | `tg-bot/webapp/` |
 | https://app.corpmeet.uz | Экран переговорной | `tablet/` |
 
@@ -26,7 +26,7 @@ cp .env.example .env        # заполнить TELEGRAM_BOT_TOKEN
 docker compose up --build
 ```
 
-Сайт откроется на `http://localhost`, API — `http://localhost:8000/docs`.
+Сайт откроется на `http://localhost`, API документация — `http://localhost/api/docs`.
 
 ## Как работать с Git
 
