@@ -12,7 +12,7 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-    await message.answer("Привет! Я бот CorpMeet. Пока работаю в режиме пинг-понг.")
+    await message.answer("Привет! Я бот CorpMeet. Пока работаю в режиме пинг-понг. Тест CI/CD")
 
 
 @dp.message()
