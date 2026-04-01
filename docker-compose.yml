@@ -41,5 +41,16 @@ services:
     ports:
       - "3002:80"
 
+  nginx:
+    build: ./nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+      - tg-webapp
+      - tablet
+
 volumes:
   postgres_data:
