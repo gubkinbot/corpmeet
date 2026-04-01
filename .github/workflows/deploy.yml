@@ -17,4 +17,4 @@ jobs:
           script: |
             cd /var/www/www-root/data/www/corpmeet.uz
             git pull origin main
-            docker compose up --build -d
+            docker compose --profile bot up --build -d
