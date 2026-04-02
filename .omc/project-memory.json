@@ -1,0 +1,195 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775103694811,
+  "projectRoot": "c:\\Users\\Timur\\Desktop\\kod\\corpmeet",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "backend": {
+      "path": "backend",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1775103694775,
+      "keyFiles": [
+        "CLAUDE.md",
+        "Dockerfile",
+        "requirements.txt"
+      ]
+    },
+    "frontend": {
+      "path": "frontend",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1775103694776,
+      "keyFiles": [
+        "CLAUDE.md",
+        "Dockerfile",
+        "index.html",
+        "nginx.conf",
+        "package-lock.json"
+      ]
+    },
+    "nginx": {
+      "path": "nginx",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1775103694776,
+      "keyFiles": [
+        "Dockerfile",
+        "nginx.conf"
+      ]
+    },
+    "tablet": {
+      "path": "tablet",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1775103694777,
+      "keyFiles": [
+        "CLAUDE.md",
+        "Dockerfile",
+        "index.html",
+        "package.json",
+        "vite.config.js"
+      ]
+    },
+    "tg-bot": {
+      "path": "tg-bot",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1775103694777,
+      "keyFiles": [
+        "CLAUDE.md",
+        "Dockerfile",
+        "requirements.txt"
+      ]
+    },
+    "venv": {
+      "path": "venv",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1775103694778,
+      "keyFiles": [
+        "pyvenv.cfg"
+      ]
+    },
+    "backend\\app": {
+      "path": "backend\\app",
+      "purpose": "Application code",
+      "fileCount": 7,
+      "lastAccessed": 1775103694780,
+      "keyFiles": [
+        "auth.py",
+        "config.py",
+        "database.py"
+      ]
+    },
+    "frontend\\dist": {
+      "path": "frontend\\dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 1,
+      "lastAccessed": 1775103694780,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "frontend\\node_modules": {
+      "path": "frontend\\node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 1,
+      "lastAccessed": 1775103694782,
+      "keyFiles": []
+    },
+    "frontend\\src": {
+      "path": "frontend\\src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1775103694782,
+      "keyFiles": [
+        "App.jsx",
+        "main.jsx"
+      ]
+    },
+    "tablet\\src": {
+      "path": "tablet\\src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1775103694783,
+      "keyFiles": [
+        "App.jsx",
+        "main.jsx"
+      ]
+    },
+    "venv\\Lib": {
+      "path": "venv\\Lib",
+      "purpose": "Library code",
+      "fileCount": 0,
+      "lastAccessed": 1775103694784,
+      "keyFiles": []
+    },
+    "venv\\Scripts": {
+      "path": "venv\\Scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 16,
+      "lastAccessed": 1775103694784,
+      "keyFiles": [
+        "activate",
+        "activate.bat",
+        "Activate.ps1"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "nginx\\nginx.conf",
+      "accessCount": 2,
+      "lastAccessed": 1775104207355,
+      "type": "file"
+    },
+    {
+      "path": "frontend\\nginx.conf",
+      "accessCount": 2,
+      "lastAccessed": 1775104216823,
+      "type": "file"
+    },
+    {
+      "path": "frontend\\src\\lib\\api.js",
+      "accessCount": 2,
+      "lastAccessed": 1775104217295,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\main.py",
+      "accessCount": 2,
+      "lastAccessed": 1775104217413,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
