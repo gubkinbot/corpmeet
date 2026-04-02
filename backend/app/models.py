@@ -19,6 +19,8 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(255))
     last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(String(15), default="user")
+    room_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("rooms.id"), nullable=True)
+    allowed_rooms: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_registered: Mapped[bool] = mapped_column(Boolean, default=False)
     feed_token: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)

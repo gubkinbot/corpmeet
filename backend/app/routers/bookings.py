@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_admin_user, get_current_user
@@ -37,6 +37,16 @@ class BookingUpdate(BaseModel):
     guests: list[str] | None = None
 
 
+class UserBrief(BaseModel):
+    id: uuid.UUID
+    first_name: str
+    last_name: str | None
+    username: str | None
+
+    class Config:
+        from_attributes = True
+
+
 class BookingOut(BaseModel):
     id: uuid.UUID
     room_id: uuid.UUID
@@ -50,12 +60,30 @@ class BookingOut(BaseModel):
     recurrence_group_id: int | None
     reminder_sent: bool
     created_at: datetime
+    user: UserBrief | None = None
 
     class Config:
         from_attributes = True
 
 
 # === Helpers ===
+
+async def _enrich_with_users(db: AsyncSession, bookings: list) -> list[dict]:
+    """Attach user object to each booking."""
+    user_ids = list({b.user_id for b in bookings})
+    if not user_ids:
+        return [BookingOut.model_validate(b).model_dump() for b in bookings]
+    result = await db.execute(select(User).where(User.id.in_(user_ids)))
+    user_map = {u.id: u for u in result.scalars().all()}
+    out = []
+    for b in bookings:
+        data = BookingOut.model_validate(b).model_dump()
+        u = user_map.get(b.user_id)
+        if u:
+            data["user"] = UserBrief.model_validate(u).model_dump()
+        out.append(data)
+    return out
+
 
 async def _check_conflict(db: AsyncSession, room_id: uuid.UUID, start: datetime, end: datetime, exclude_id: uuid.UUID | None = None):
     query = select(Booking).where(
@@ -102,7 +130,7 @@ def _generate_ical(bookings: list[Booking], cal_name: str = "CorpMeet") -> str:
 
 # === GET /bookings/ ===
 
-@router.get("/", response_model=list[BookingOut])
+@router.get("/")
 async def list_bookings(
     date_from: date = Query(...),
     date_to: date | None = None,
@@ -127,7 +155,7 @@ async def list_bookings(
     query = query.order_by(Booking.start_time)
 
     result = await db.execute(query)
-    return result.scalars().all()
+    return await _enrich_with_users(db, result.scalars().all())
 
 
 # === POST /bookings/ ===
@@ -302,7 +330,7 @@ async def delete_booking(
 
 # === GET /bookings/active ===
 
-@router.get("/active", response_model=list[BookingOut])
+@router.get("/active")
 async def active_bookings(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -318,7 +346,7 @@ async def active_bookings(
             )
         ).order_by(Booking.start_time)
     )
-    return result.scalars().all()
+    return await _enrich_with_users(db, result.scalars().all())
 
 
 # === GET /bookings/export ===
@@ -360,7 +388,7 @@ async def booking_feed(feed_token: str, db: AsyncSession = Depends(get_db)):
 
 # === GET /bookings/admin/all ===
 
-@router.get("/admin/all", response_model=list[BookingOut])
+@router.get("/admin/all")
 async def admin_all_bookings(
     _admin: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db),
@@ -369,4 +397,4 @@ async def admin_all_bookings(
         select(Booking).where(Booking.deleted_at.is_(None))
         .order_by(Booking.created_at.desc()).limit(200)
     )
-    return result.scalars().all()
+    return await _enrich_with_users(db, result.scalars().all())
