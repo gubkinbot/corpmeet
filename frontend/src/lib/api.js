@@ -1,6 +1,6 @@
 import { storage } from "./storage";
 
-const BASE = "/api/v1";
+const BASE = "/api";
 
 export async function apiFetch(path, options = {}) {
   const token = storage.getToken();
