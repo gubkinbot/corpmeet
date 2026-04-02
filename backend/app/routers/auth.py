@@ -37,12 +37,18 @@ class TelegramRegisterRequest(BaseModel):
     last_name: str = ""
 
 
+class WebRegisterRequest(BaseModel):
+    first_name: str
+    last_name: str
+
+
 class UserOut(BaseModel):
     id: uuid.UUID
     telegram_id: int | None
     username: str | None
     first_name: str
     last_name: str | None
+    role: str
 
     class Config:
         from_attributes = True
@@ -127,6 +133,7 @@ async def telegram_register(body: TelegramRegisterRequest, db: AsyncSession = De
         username=tg_user.get("username"),
         first_name=body.first_name,
         last_name=body.last_name or None,
+        is_registered=True,
     )
     db.add(user)
     await db.commit()
@@ -135,14 +142,56 @@ async def telegram_register(body: TelegramRegisterRequest, db: AsyncSession = De
     return AuthResponse(access_token=create_jwt(user.id), expires_in=EXPIRES_IN_SECONDS)
 
 
-# === 3. GET /auth/me ===
+# === 3. POST /auth/web-register ===
+
+@router.post("/web-register", response_model=AuthResponse, status_code=201)
+async def web_register(body: WebRegisterRequest, db: AsyncSession = Depends(get_db)):
+    user = User(
+        first_name=body.first_name,
+        last_name=body.last_name,
+        is_registered=True,
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    return AuthResponse(access_token=create_jwt(user.id), expires_in=EXPIRES_IN_SECONDS)
+
+
+# === 4. POST /auth/dev-login ===
+
+@router.post("/dev-login", response_model=AuthResponse)
+async def dev_login(db: AsyncSession = Depends(get_db)):
+    if settings.corpmeet_dev != "1":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+    result = await db.execute(select(User).where(User.telegram_id == 999000001))
+    user = result.scalars().first()
+
+    if not user:
+        user = User(
+            telegram_id=999000001,
+            first_name="Dev",
+            last_name="User",
+            username="devuser",
+            role="superadmin",
+            is_registered=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+    return AuthResponse(access_token=create_jwt(user.id), expires_in=EXPIRES_IN_SECONDS)
+
+
+# === 5. GET /auth/me ===
 
 @router.get("/me", response_model=UserOut)
 async def get_me(user: User = Depends(get_current_user)):
     return UserOut.model_validate(user)
 
 
-# === 4. POST /auth/qr-session ===
+# === 6. POST /auth/qr-session ===
 
 @router.post("/qr-session", response_model=QrSessionResponse)
 async def create_qr_session(db: AsyncSession = Depends(get_db)):
@@ -159,12 +208,12 @@ async def create_qr_session(db: AsyncSession = Depends(get_db)):
 
     return QrSessionResponse(
         token=session_token,
-        bot_url=f"https://t.me/corpmeetbot?start={session_token}",
+        bot_url=f"https://t.me/{settings.tg_bot_username}?start={session_token}",
         expires_in=SESSION_TTL_MINUTES * 60,
     )
 
 
-# === 5. POST /auth/browser/session ===
+# === 7. POST /auth/browser/session ===
 
 @router.post("/browser/session", response_model=BrowserSessionResponse)
 async def create_browser_session(
@@ -188,7 +237,7 @@ async def create_browser_session(
     )
 
 
-# === 6. GET /auth/session/{token} ===
+# === 8. GET /auth/session/{token} ===
 
 @router.get("/session/{token}")
 async def get_session(token: str, db: AsyncSession = Depends(get_db)):
@@ -210,6 +259,7 @@ async def get_session(token: str, db: AsyncSession = Depends(get_db)):
         return JSONResponse(status_code=202, content={"status": "pending"})
 
     session.used = True
+    session.used_at = datetime.now(timezone.utc)
     await db.commit()
 
     user_result = await db.execute(select(User).where(User.id == session.user_id))
@@ -221,7 +271,7 @@ async def get_session(token: str, db: AsyncSession = Depends(get_db)):
     )
 
 
-# === 7. POST /auth/tablet ===
+# === 9. POST /auth/tablet ===
 
 @router.post("/tablet", response_model=TabletLoginResponse)
 async def tablet_login(body: TabletLoginRequest, db: AsyncSession = Depends(get_db)):

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine
 from app.models import Base
-from app.routers import auth, bookings, internal, rooms
+from app.routers import auth, bookings, internal, rooms, slots, tablet, users
 
 
 @asynccontextmanager
@@ -25,9 +25,12 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(bookings.router)
+app.include_router(slots.router)
+app.include_router(users.router)
+app.include_router(tablet.router)
 app.include_router(internal.router)
 app.include_router(rooms.router)
-app.include_router(bookings.router)
 
 
 @app.get("/health")

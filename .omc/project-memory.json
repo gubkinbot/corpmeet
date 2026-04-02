@@ -167,6 +167,12 @@
   },
   "hotPaths": [
     {
+      "path": "backend\\app\\main.py",
+      "accessCount": 3,
+      "lastAccessed": 1775109176721,
+      "type": "file"
+    },
+    {
       "path": "nginx\\nginx.conf",
       "accessCount": 2,
       "lastAccessed": 1775104207355,
@@ -185,9 +191,57 @@
       "type": "file"
     },
     {
-      "path": "backend\\app\\main.py",
+      "path": "backend\\app\\models.py",
       "accessCount": 2,
-      "lastAccessed": 1775104217413,
+      "lastAccessed": 1775109002949,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\config.py",
+      "accessCount": 2,
+      "lastAccessed": 1775109004742,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\auth.py",
+      "accessCount": 2,
+      "lastAccessed": 1775109015596,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\routers\\auth.py",
+      "accessCount": 2,
+      "lastAccessed": 1775109054903,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\routers\\bookings.py",
+      "accessCount": 2,
+      "lastAccessed": 1775109093001,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\routers\\internal.py",
+      "accessCount": 2,
+      "lastAccessed": 1775109153242,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\routers\\slots.py",
+      "accessCount": 1,
+      "lastAccessed": 1775109098591,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\routers\\users.py",
+      "accessCount": 1,
+      "lastAccessed": 1775109131212,
+      "type": "file"
+    },
+    {
+      "path": "backend\\app\\routers\\tablet.py",
+      "accessCount": 1,
+      "lastAccessed": 1775109165193,
       "type": "file"
     }
   ],

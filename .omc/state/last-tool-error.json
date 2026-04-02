@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /c/Users/Timur/Desktop/kod/corpmeet/backend && ./venv/Scripts/python -c \\\"\\nfrom app.main import app\\nroutes = []\\nfor route in app.routes:\\n    if hasattr(route, 'methods') and hasattr...",
+  "error": "Exit code 127\n/usr/bin/bash: line 14: ./venv/Scripts/python: No such file or directory",
+  "timestamp": "2026-04-02T05:58:41.952Z",
+  "retry_count": 1
+}
