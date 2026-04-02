@@ -10,3 +10,5 @@ venv/
 .mypy_cache/
 .pytest_cache/
 postgres_data/
+.DS_Store
+.DS_Store
