@@ -1,38 +1,34 @@
 import asyncio
-import os
+import logging
 
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from aiogram import Bot, Dispatcher
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://tg.corpmeet.uz")
+from bot.config import load_config
+from bot.api_client import ApiClient
+from bot.handlers import setup_routers
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
-
-
-@dp.message(CommandStart())
-async def cmd_start(message: types.Message):
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="Открыть CorpMeet",
-            web_app=WebAppInfo(url=WEBAPP_URL),
-        )]
-    ])
-    await message.answer(
-        "Привет! Я бот CorpMeet. Нажми кнопку, чтобы открыть приложение.",
-        reply_markup=keyboard,
-    )
-
-
-@dp.message()
-async def echo(message: types.Message):
-    await message.answer(message.text or "🤔")
+logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    await dp.start_polling(bot)
+    config = load_config()
+    bot = Bot(token=config.bot_token)
+    api_client = ApiClient(
+        backend_url=config.backend_url,
+        bot_internal_secret=config.bot_internal_secret,
+    )
+
+    dp = Dispatcher()
+    dp.include_router(setup_routers())
+
+    dp["config"] = config
+    dp["api_client"] = api_client
+
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await api_client.close()
+        await bot.session.close()
 
 
 if __name__ == "__main__":

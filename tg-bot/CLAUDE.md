@@ -1,46 +1,46 @@
-# Telegram Bot + Web App
+# tg-bot — Телеграм-бот CorpMeet
 
-## Зона ответственности
-Telegram-бот для бронирования + встроенное веб-приложение (Web App). Доступно на https://tg.corpmeet.uz
+## Режим работы
+
+Claude **не выполняет команды самостоятельно** — только выводит команды и код в чат. Пользователь вручную выполняет команды и дополняет код. После обратной связи от пользователя Claude проверяет файлы на корректность.
+
+После вывода предлагаемого кода — давать **подробное описание**: что делает каждый блок, зачем нужен, как связан с остальными модулями.
+
+## Владелец модуля
+
+Артём — Telegram-бот + Mini App webapp
 
 ## Стек
-- Бот: Python 3.12, aiogram 3
-- Web App: React 18, Vite
 
-## Структура
-```
-tg-bot/
-├── bot/
-│   ├── main.py        # Точка входа, диспетчер
-│   └── ...
-├── webapp/            # React-приложение для Telegram Web App
-│   ├── index.html
-│   └── src/
-│       ├── main.jsx
-│       └── App.jsx
-```
+- Python 3.12, aiogram 3
+- React (webapp на tg.corpmeet.uz)
+- Docker
 
-## Правила бота
-- Хэндлеры — async, с фильтрами aiogram (не парсить текст вручную)
-- Каждая команда должна иметь описание для /help
-- Ошибки ловить через try/except с логированием
-- Состояние пользователя хранить в БД, не в памяти
-- Токен бота — только через переменную окружения TELEGRAM_BOT_TOKEN
+## Архитектура авторизации
 
-## Правила Web App
-- Те же что для frontend: функциональные компоненты, хуки, fetch к /api/
-- Учитывать Telegram Web App SDK (window.Telegram.WebApp)
-- Адаптировать под мобильный экран (Telegram открывает в панели)
+Бот реализует:
+- `/start` — проверка членства в группе (`getChatMember`), ввод имени/фамилии (латиница), регистрация через backend API, показ 2 кнопок
+- `/start <token>` — QR-авторизация: вызов `POST /api/v1/internal/auth/consume-session` с заголовком `X-Bot-Secret`
+- Кнопка "Открыть Telegram App" — WebApp-кнопка (tg.corpmeet.uz), авторизация через initData
+- Кнопка "Открыть Web" — вызов `POST /api/v1/internal/auth/create-session` с `X-Bot-Secret` → отправка URL-кнопки `corpmeet.uz/auth/session/<token>`
 
-## Запуск локально
-```bash
-# Бот
-cd tg-bot
-pip install -r requirements.txt
-python -m bot.main
+## Взаимодействие с backend
 
-# Web App
-cd tg-bot/webapp
-npm install
-npm run dev
-```
+- Backend — чужой модуль (Тимур), не модифицируем
+- Все запросы к backend через HTTP
+- Internal API (бот → backend) авторизуется заголовком `X-Bot-Secret`
+- initData проверяется на стороне backend
+
+## Переменные окружения (.env)
+
+- `BOT_TOKEN` — токен бота от @BotFather
+- `BOT_SECRET` — общий секрет для internal API (бот ↔ backend)
+- `GROUP_ID` — ID группы для проверки членства
+- `BACKEND_URL` — URL backend API (например http://backend:8000)
+
+## Git
+
+- Ветки: `artem/тип-описание` (например `artem/feat-auth`)
+- Коммиты: `feat:`, `fix:`, `refactor:`, `docs:`
+- PR в `main`, ревьюер — Иван (@gubkinbot)
+- Коммитить только в `tg-bot/`
