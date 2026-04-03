@@ -16,7 +16,6 @@ from bot.handlers.start import (
     cmd_start_token,
     process_first_name,
     process_last_name,
-    on_open_web,
     Registration,
 )
 
@@ -71,18 +70,6 @@ def make_message(user_id: int = 111, text: str = "", username: str = "artem"):
     message.text = text
     message.answer = AsyncMock()
     return message
-
-
-def make_callback(user_id: int = 111):
-    callback = AsyncMock()
-    callback.from_user = MagicMock()
-    callback.from_user.id = user_id
-    callback.message = AsyncMock()
-    callback.message.answer = AsyncMock()
-    callback.answer = AsyncMock()
-    callback.data = "open_web"
-    return callback
-
 
 # --- check_group_member ---
 
@@ -230,29 +217,10 @@ async def test_start_token_expired(bot, config, api_client):
 
     message.answer.assert_called_with("Ссылка недействительна или истекла. Попробуйте заново.")
 
-
-# --- open_web callback ---
-
 @pytest.mark.asyncio
-async def test_open_web_ok(config, api_client):
-    callback = make_callback()
-
-    await on_open_web(callback, config, api_client)
-
-    api_client.create_qr_session.assert_called_once()
-    api_client.consume_session.assert_called_once_with(token="abc123", telegram_id=111)
-    callback.message.answer.assert_called_once()
-    call_kwargs = callback.message.answer.call_args
-    assert "reply_markup" in call_kwargs.kwargs
-    callback.answer.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_open_web_error(config, api_client):
-    api_client.create_qr_session.side_effect = Exception("backend down")
-    callback = make_callback()
-
-    await on_open_web(callback, config, api_client)
-
-    callback.message.answer.assert_called_with("Не удалось создать сессию. Попробуйте позже.")
-    callback.answer.assert_called_once()
+async def test_keyboard_has_single_button():
+    from bot.handlers.start import main_keyboard
+    kb = main_keyboard("https://tg.corpmeet.uz")
+    assert len(kb.inline_keyboard) == 1
+    assert kb.inline_keyboard[0][0].text == "Открыть CorpMeet"
+    assert kb.inline_keyboard[0][0].web_app is not None
