@@ -26,15 +26,10 @@ async def check_group_member(bot: Bot, group_id: int, user_id: int) -> bool:
 def main_keyboard(webapp_url: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="Открыть Telegram App",
+            text="Открыть CorpMeet",
             web_app=WebAppInfo(url=webapp_url),
         )],
-        [InlineKeyboardButton(
-            text="Открыть Web",
-            callback_data="open_web",
-        )],
     ])
-
 
 @router.message(CommandStart(deep_link=True))
 async def cmd_start_token(
@@ -131,29 +126,3 @@ async def process_last_name(
         f"Регистрация завершена, {first_name} {last_name}!",
         reply_markup=main_keyboard(config.webapp_url),
     )
-
-
-
-@router.callback_query(lambda c: c.data == "open_web")
-async def on_open_web(
-    callback: types.CallbackQuery,
-    config: Config,
-    api_client: ApiClient,
-):
-    user_id = callback.from_user.id
-
-    try:
-        qr = await api_client.create_qr_session()
-        token = qr["token"]
-
-        await api_client.consume_session(token=token, telegram_id=user_id)
-
-        url = f"https://corpmeet.uz/auth/session/{token}"
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Перейти на сайт", url=url)],
-        ])
-        await callback.message.answer("Нажмите кнопку для перехода:", reply_markup=keyboard)
-    except Exception:
-        await callback.message.answer("Не удалось создать сессию. Попробуйте позже.")
-
-    await callback.answer()
