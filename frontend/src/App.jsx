@@ -11,8 +11,6 @@ import BookingsList from "./components/Dashboard/BookingsList";
 import AdminPanel from "./components/Dashboard/AdminPanel";
 import LoginPage from "./pages/LoginPage";
 import SessionAuthPage from "./pages/SessionAuthPage";
-import TabletPage from "./pages/TabletPage";
-import TgAppPage from "./pages/TgAppPage";
 
 function Dashboard() {
   const { user, loading, logout } = useAuth();
@@ -189,9 +187,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/session/:token" element={<SessionAuthPage />} />
       <Route path="/bookings" element={<Dashboard />} />
-      <Route path="/tablet" element={<TabletPage />} />
-      <Route path="/tg" element={<TgAppPage />} />
-      <Route path="*" element={<Navigate to="/bookings" replace />} />
+<Route path="*" element={<Navigate to="/bookings" replace />} />
     </Routes>
   );
 }
