@@ -27,7 +27,7 @@ const RECURRENCE_OPTIONS = [
   { value: "none", label: "Без повторений" },
   { value: "daily", label: "Ежедневно" },
   { value: "weekly", label: "Еженедельно" },
-  { value: "custom", label: "По дням" },
+  { value: "custom", label: "Своё расписание" },
 ];
 
 const WEEKDAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -262,7 +262,13 @@ export default function BookingModal({ isOpen, onClose, initialStart, initialEnd
           guests, recurrence,
         };
         if (recurrence !== "none") {
-          payload.recurrence_until = recurrenceUntil || null;
+          let until = recurrenceUntil;
+          if (!until) {
+            const d = new Date(startTime);
+            d.setDate(d.getDate() + 7);
+            until = d.toISOString().split("T")[0];
+          }
+          payload.recurrence_until = until;
           if (recurrence === "custom") payload.recurrence_days = recurrenceDays;
         }
         const created = await createMut.mutateAsync(payload);
@@ -493,9 +499,15 @@ export default function BookingModal({ isOpen, onClose, initialStart, initialEnd
                         <label className="block text-xs font-semibold mb-1.5" style={{ color: "var(--text-sec)" }}>
                           Повторение
                         </label>
-                        <div className="flex gap-1.5 flex-wrap">
+                        <div className="flex gap-1.5 flex-nowrap">
                           {RECURRENCE_OPTIONS.map(o => (
-                            <button key={o.value} onClick={() => setRecurrence(o.value)}
+                            <button key={o.value} onClick={() => {
+                              setRecurrence(o.value);
+                              if (o.value === "custom" && recurrenceDays.length === 0 && startTime) {
+                                const jsDay = new Date(startTime).getDay();
+                                setRecurrenceDays([(jsDay + 6) % 7]);
+                              }
+                            }}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                               style={recurrence === o.value
                                 ? { background: "var(--primary)", color: "#fff" }
@@ -507,7 +519,10 @@ export default function BookingModal({ isOpen, onClose, initialStart, initialEnd
 
                         {recurrence !== "none" && (
                           <div className="mt-2.5">
-                            <DateTimePicker label="Повторять до" value={recurrenceUntil}
+                            <DateTimePicker label="Повторять до"
+                              value={recurrenceUntil
+                                ? `${recurrenceUntil}T${startTime ? startTime.split("T")[1] : "09:00"}`
+                                : (startTime ? startTime : "")}
                               onChange={v => setRecurrenceUntil(v.split("T")[0])} />
                           </div>
                         )}
