@@ -72,7 +72,8 @@ async def internal_consume_session(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     if session.used:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Session already used")
-    if session.expires_at < datetime.now(timezone.utc):
+    expires = session.expires_at if session.expires_at.tzinfo else session.expires_at.replace(tzinfo=timezone.utc)
+    if expires < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Session expired")
 
     user_result = await db.execute(select(User).where(User.telegram_id == body.telegram_id))

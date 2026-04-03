@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdminUsers, useAdminStats, useCreateAdminUser, useDeleteAdminUser, useChangeUserRole, useAssignUserRoom, useSetAdminRooms } from "../../hooks/useUsers";
+import { useAdminUsers, useAdminStats, useCreateAdminUser, useDeleteAdminUser, useChangeUserRole, useAssignUserRoom, useSetAdminRooms, useAdminRooms, useCreateRoom, useDeleteRoom } from "../../hooks/useUsers";
 import { useRooms } from "../../hooks/useUsers";
 import { useAdminBookings } from "../../hooks/useBookings";
 
@@ -13,11 +13,18 @@ export default function AdminPanel({ isOpen, onClose, currentUser }) {
   const [tab, setTab] = useState("stats");
   const [newName, setNewName] = useState("");
   const [newLastName, setNewLastName] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const [roomFloor, setRoomFloor] = useState("");
+  const [roomCapacity, setRoomCapacity] = useState("");
+  const [createdCreds, setCreatedCreds] = useState(null);
 
   const { data: stats } = useAdminStats();
   const { data: users = [] } = useAdminUsers();
   const { data: bookings = [] } = useAdminBookings();
   const { data: rooms = [] } = useRooms();
+  const { data: adminRooms = [] } = useAdminRooms();
+  const createRoom = useCreateRoom();
+  const deleteRoomMut = useDeleteRoom();
   const createUser = useCreateAdminUser();
   const deleteUser = useDeleteAdminUser();
   const changeRole = useChangeUserRole();
@@ -33,11 +40,21 @@ export default function AdminPanel({ isOpen, onClose, currentUser }) {
     setNewLastName("");
   };
 
-  const tabs = [
+  const handleCreateRoom = async () => {
+    if (!roomName.trim() || !roomFloor || !roomCapacity) return;
+    const result = await createRoom.mutateAsync({
+      name: roomName, floor: Number(roomFloor), capacity: Number(roomCapacity),
+    });
+    setCreatedCreds({ username: result.tablet_username, password: result.tablet_password, room: result.name });
+    setRoomName(""); setRoomFloor(""); setRoomCapacity("");
+  };
+
+  const baseTabs = [
     { id: "stats", label: "Статистика" },
     { id: "bookings", label: "Бронирования" },
     { id: "users", label: "Пользователи" },
   ];
+  const tabs = isSuperadmin ? [...baseTabs, { id: "rooms", label: "Комнаты" }] : baseTabs;
 
   return (
     <AnimatePresence>
@@ -107,6 +124,75 @@ export default function AdminPanel({ isOpen, onClose, currentUser }) {
                           {b.user.first_name} {b.user.last_name || ""}
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Rooms (superadmin only) */}
+              {tab === "rooms" && isSuperadmin && (
+                <div className="flex flex-col gap-3">
+                  {/* Created credentials banner */}
+                  {createdCreds && (
+                    <div className="rounded-xl p-3" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                      <div className="text-xs font-bold mb-1" style={{ color: "#16a34a" }}>
+                        Планшет для «{createdCreds.room}» создан
+                      </div>
+                      <div className="text-xs font-mono space-y-0.5" style={{ color: "var(--text)" }}>
+                        <div>Логин: <b>{createdCreds.username}</b></div>
+                        <div>Пароль: <b>{createdCreds.password}</b></div>
+                      </div>
+                      <div className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>
+                        Сохраните пароль — он больше не будет показан
+                      </div>
+                      <button onClick={() => {
+                        navigator.clipboard.writeText(`Логин: ${createdCreds.username}\nПароль: ${createdCreds.password}`);
+                      }} className="mt-2 px-3 py-1 rounded-lg text-xs font-semibold"
+                        style={{ background: "rgba(34,197,94,0.15)", color: "#16a34a", border: "1px solid rgba(34,197,94,0.3)" }}>
+                        Скопировать
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Create room form */}
+                  <div className="flex flex-col gap-2">
+                    <input value={roomName} onChange={e => setRoomName(e.target.value)} placeholder="Название комнаты"
+                      className="px-3 py-2 rounded-xl text-sm outline-none"
+                      style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text)" }} />
+                    <div className="flex gap-2">
+                      <input value={roomFloor} onChange={e => setRoomFloor(e.target.value)} placeholder="Этаж" type="number"
+                        className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text)" }} />
+                      <input value={roomCapacity} onChange={e => setRoomCapacity(e.target.value)} placeholder="Мест" type="number"
+                        className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
+                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text)" }} />
+                      <button onClick={handleCreateRoom} disabled={createRoom.isPending}
+                        className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                        style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}>
+                        {createRoom.isPending ? "..." : "+"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Room list */}
+                  {adminRooms.map(r => (
+                    <div key={r.id} className="rounded-xl p-3"
+                      style={{ background: "var(--elevated)", border: "1px solid var(--border-light)" }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
+                          style={{ background: "linear-gradient(135deg, #06b6d4, #0891b2)" }}>
+                          {r.floor}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>{r.name}</div>
+                          <div className="text-xs" style={{ color: "var(--text-muted)" }}>
+                            {r.capacity} мест · {r.tablet_username ? `планшет: ${r.tablet_username}` : "без планшета"}
+                          </div>
+                        </div>
+                        <button onClick={() => { if (confirm(`Удалить «${r.name}»?`)) deleteRoomMut.mutate(r.id); }}
+                          className="text-xs px-2 py-1 rounded-lg shrink-0"
+                          style={{ color: "var(--danger)" }}>✕</button>
+                      </div>
                     </div>
                   ))}
                 </div>

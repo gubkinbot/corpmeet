@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { searchUsers, getAdminUsers, getAdminStats, createAdminUser, deleteAdminUser, changeUserRole, assignUserRoom, getRooms, setAdminRooms } from "../lib/users";
+import { searchUsers, getAdminUsers, getAdminStats, createAdminUser, deleteAdminUser, changeUserRole, assignUserRoom, getRooms, setAdminRooms, getAdminRooms, createRoom, deleteRoom } from "../lib/users";
 
 export function useUsers(query) {
   return useQuery({
@@ -71,5 +71,33 @@ export function useSetAdminRooms() {
   return useMutation({
     mutationFn: ({ id, roomIds }) => setAdminRooms(id, roomIds),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
+export function useAdminRooms() {
+  return useQuery({
+    queryKey: ["rooms", "admin"],
+    queryFn: getAdminRooms,
+    staleTime: 30000,
+  });
+}
+
+export function useCreateRoom() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createRoom,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["rooms"] });
+    },
+  });
+}
+
+export function useDeleteRoom() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteRoom,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["rooms"] });
+    },
   });
 }

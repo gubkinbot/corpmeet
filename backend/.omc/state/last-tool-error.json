@@ -1,0 +1,7 @@
+{
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"C:\\\\Users\\\\Timur\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Timur-Desktop-kod-corpmeet\\\\1608f1dd-657a-4efc-89d9-8df98fa3cf2a\\\\tasks\\\\br4t6lrfk.output\"}",
+  "error": "File content (353.3KB) exceeds maximum allowed size (256KB). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.",
+  "timestamp": "2026-04-03T11:41:10.812Z",
+  "retry_count": 1
+}

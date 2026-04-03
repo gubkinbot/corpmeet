@@ -60,3 +60,21 @@ export function setAdminRooms(id, roomIds) {
     body: { room_ids: roomIds },
   });
 }
+
+export async function getAdminRooms() {
+  const res = await apiFetch("/rooms/admin/list");
+  if (!res.ok) throw new Error("Failed to fetch rooms");
+  return res.json();
+}
+
+export async function createRoom(payload) {
+  const res = await apiFetch("/rooms/", { method: "POST", body: payload });
+  if (!res.ok) throw new Error("Failed to create room");
+  return res.json();
+}
+
+export async function deleteRoom(id) {
+  const res = await apiFetch(`/rooms/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete room");
+  return res.json();
+}
