@@ -49,6 +49,7 @@ class UserOut(BaseModel):
     first_name: str
     last_name: str | None
     role: str
+    room_id: uuid.UUID | None = None
 
     class Config:
         from_attributes = True

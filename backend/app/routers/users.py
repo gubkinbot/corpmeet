@@ -21,6 +21,8 @@ class UserOut(BaseModel):
     first_name: str
     last_name: str | None
     role: str
+    room_id: uuid.UUID | None = None
+    allowed_rooms: list | None = None
     is_active: bool
     is_registered: bool
 
@@ -34,6 +36,7 @@ class UserCreate(BaseModel):
     telegram_id: int | None = None
     username: str | None = None
     role: str = "user"
+    room_id: uuid.UUID | None = None
 
 
 class RoleUpdate(BaseModel):
@@ -120,6 +123,7 @@ async def admin_create_user(
         telegram_id=body.telegram_id,
         username=body.username,
         role=body.role,
+        room_id=body.room_id,
         is_registered=True,
     )
     db.add(user)
@@ -175,6 +179,50 @@ async def admin_stats(
         total_bookings=bookings_count.scalar() or 0,
         active_bookings=active_count.scalar() or 0,
     )
+
+
+# === PATCH /users/admin/users/{id}/room ===
+
+class RoomAssign(BaseModel):
+    room_id: uuid.UUID | None = None
+
+
+@router.patch("/admin/users/{user_id}/room", response_model=UserOut)
+async def admin_assign_room(
+    user_id: uuid.UUID,
+    body: RoomAssign,
+    _admin: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.room_id = body.room_id
+    await db.commit()
+    await db.refresh(user)
+    return UserOut.model_validate(user)
+
+
+class AllowedRoomsUpdate(BaseModel):
+    room_ids: list[uuid.UUID] = []
+
+
+@router.patch("/admin/users/{user_id}/allowed-rooms", response_model=UserOut)
+async def superadmin_set_allowed_rooms(
+    user_id: uuid.UUID,
+    body: AllowedRoomsUpdate,
+    _admin: User = Depends(get_superadmin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.allowed_rooms = [str(r) for r in body.room_ids] if body.room_ids else None
+    await db.commit()
+    await db.refresh(user)
+    return UserOut.model_validate(user)
 
 
 # === Superadmin endpoints ===

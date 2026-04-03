@@ -45,6 +45,8 @@ CorpMeet — сервис бронирования переговорных ко
 | `first_name` | String(255) | Имя |
 | `last_name` | String(255), nullable | Фамилия |
 | `role` | String(15), default `"user"` | Роль: `user`, `admin`, `superadmin` |
+| `room_id` | UUID (FK → rooms), nullable | Предпочитаемая переговорная (информационное поле) |
+| `allowed_rooms` | JSONB, nullable | Белый список UUID комнат, доступных пользователю. `NULL` = доступ ко всем |
 | `is_active` | Boolean, default `true` | Активен ли аккаунт |
 | `is_registered` | Boolean, default `false` | Завершил ли пользователь регистрацию |
 | `feed_token` | String(64), unique, nullable | Токен для iCal-фида (генерируется по запросу) |
@@ -157,7 +159,7 @@ python -m app.seed --tablet-username tablet-room1 --tablet-password secret --roo
 
 ### frontend (`corpmeet.uz`)
 
-Основной веб-сайт. React 18 + React Router v7 + Vite.
+Основной веб-сайт. React 18 + React Router v7 + Vite. Реализован полностью.
 
 **Маршруты:**
 
@@ -165,7 +167,9 @@ python -m app.seed --tablet-username tablet-room1 --tablet-password secret --roo
 |---|---|---|
 | `/login` | `LoginPage` | Страница входа: auto-login через initData или QR-код |
 | `/auth/session/:token` | `SessionAuthPage` | Приём deep-link сессии из Mini App |
-| `/bookings` | `BookingsPage` | Главная страница пользователя |
+| `/bookings` | `Dashboard` | Главная страница с календарём и панелями |
+| `/tablet` | `TabletPage` | Встроенный вид планшета (для разработки) |
+| `/tg` | `TgAppPage` | Встроенный вид Mini App (для разработки) |
 | `*` | — | Редирект на `/bookings` |
 
 **Хранение токена:** `localStorage`, ключ `corpmeet_token`.
@@ -174,19 +178,24 @@ python -m app.seed --tablet-username tablet-room1 --tablet-password secret --roo
 
 **Хук `useAuth`:** при монтировании читает токен из `localStorage`, вызывает `GET /api/auth/me` для проверки актуальности и получения профиля. При ошибке — удаляет токен.
 
-**Статус:** авторизация реализована полностью. Интерфейс бронирований — заглушка (`в разработке`).
+**Dashboard:** полноценный интерфейс бронирований. Состоит из:
+- `Calendar` — многодневный вид с 30-минутными слотами, drag-and-drop перетаскивание встреч, цветовая подсветка комнат.
+- `BookingModal` — создание и редактирование бронирования: выбор комнаты, времени, гостей (поиск по базе), повторяющиеся встречи.
+- `BookingsList` — боковая панель со списком предстоящих встреч пользователя. iCal-экспорт.
+- `AdminPanel` — боковая панель для admin/superadmin: управление пользователями (роли, комнаты), статистика.
+- Поддержка светлой/тёмной темы (`ThemeContext`), анимации через `framer-motion`.
 
 ---
 
-### tg-webapp (`tg.corpmeet.uz`)
+### tg-webapp (`tg.corpmeet.uz`, `tg-bot/webapp/`)
 
-Mini App в Telegram. Отображает приветствие с именем из `tg.initDataUnsafe.user`. Интеграция с API и авторизация через `initData` — в разработке.
+Отдельный React-проект — Mini App внутри Telegram. Текущая реализация — заглушка: показывает приветствие с именем пользователя из `tg.initDataUnsafe.user`. Полноценная интеграция с API **в разработке**.
 
 ---
 
-### tablet (`app.corpmeet.uz`)
+### tablet (`app.corpmeet.uz`, `tablet/`)
 
-Экран у входа в переговорную. Отображает статус "Свободна". Авторизация через `POST /api/auth/tablet` и работа с `/api/tablet/` — в разработке.
+Отдельный React-проект — экран у входа в переговорную. Текущая реализация — заглушка: отображает зелёный блок «Свободна». Авторизация через `POST /api/auth/tablet` и работа с `/api/tablet/` **в разработке**.
 
 ---
 
@@ -482,6 +491,41 @@ Telegram-бот на aiogram 3. Текущая реализация:
 | **Авторизация** | `Bearer <JWT>` |
 | **Ответ** | `[{ "id", "name", "floor", "capacity" }, ...]` |
 
+Если у пользователя заполнено поле `allowed_rooms`, возвращает только переговорные из этого списка. Для `superadmin` — все комнаты.
+
+---
+
+#### `GET /api/rooms/status`
+
+Публичное состояние всех переговорных: текущее и следующее бронирование. Используется экранами планшетов и виджетами.
+
+| | |
+|---|---|
+| **Авторизация** | Не требуется |
+| **Ответ** | Массив объектов, отсортированный по `floor`, `name` |
+
+```json
+[{
+  "id": "...",
+  "name": "Переговорная А",
+  "floor": 3,
+  "capacity": 8,
+  "current_booking": {
+    "title": "Встреча команды",
+    "start_time": "2026-04-02T10:00:00+05:00",
+    "end_time": "2026-04-02T11:00:00+05:00",
+    "organizer": "Иван Иванов"
+  },
+  "next_booking": {
+    "title": "Созвон с клиентом",
+    "start_time": "2026-04-02T12:00:00+05:00",
+    "end_time": "2026-04-02T13:00:00+05:00"
+  }
+}]
+```
+
+`current_booking` и `next_booking` равны `null`, если нет активных/предстоящих бронирований.
+
 ---
 
 #### `POST /api/rooms/`
@@ -628,12 +672,12 @@ Telegram-бот на aiogram 3. Текущая реализация:
 
 #### `GET /api/users/me`
 
-Профиль текущего пользователя (расширенный, с полями `is_active`, `is_registered`).
+Профиль текущего пользователя (расширенный).
 
 | | |
 |---|---|
 | **Авторизация** | `Bearer <JWT>` |
-| **Ответ** | `{ "id", "telegram_id", "username", "first_name", "last_name", "role", "is_active", "is_registered" }` |
+| **Ответ** | `{ "id", "telegram_id", "username", "first_name", "last_name", "role", "room_id", "allowed_rooms", "is_active", "is_registered" }` |
 
 ---
 
@@ -707,6 +751,34 @@ Telegram-бот на aiogram 3. Текущая реализация:
 | **Ответ** | `{ "total_users": N, "total_bookings": N, "active_bookings": N }` |
 
 `active_bookings` — бронирования с `deleted_at IS NULL` и `end_time > now`.
+
+---
+
+#### `PATCH /api/users/admin/users/{user_id}/room` *(admin)*
+
+Назначение или сброс предпочитаемой переговорной пользователя.
+
+| | |
+|---|---|
+| **Авторизация** | `Bearer <JWT>`, роль `admin` или `superadmin` |
+| **Тело запроса** | `{ "room_id": "uuid" }` — передать `null` для сброса |
+| **Ответ** | Обновлённый `UserOut` |
+| **Ошибки** | `404` — пользователь не найден |
+
+---
+
+#### `PATCH /api/users/admin/users/{user_id}/allowed-rooms` *(superadmin)*
+
+Установка белого списка переговорных, доступных пользователю. Если список пуст — ограничение снимается (доступ ко всем комнатам).
+
+| | |
+|---|---|
+| **Авторизация** | `Bearer <JWT>`, роль `superadmin` |
+| **Тело запроса** | `{ "room_ids": ["uuid", "uuid", ...] }` |
+| **Ответ** | Обновлённый `UserOut` |
+| **Ошибки** | `404` — пользователь не найден |
+
+Влияет на ответ `GET /api/rooms/` — пользователи с непустым `allowed_rooms` видят только разрешённые комнаты.
 
 ---
 

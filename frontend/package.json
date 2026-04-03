@@ -9,10 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@tanstack/react-query": "^5.96.1",
+    "autoprefixer": "^10.4.27",
+    "framer-motion": "^12.38.0",
+    "postcss": "^8.5.8",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.1.1",
-    "qrcode.react": "^4.2.0"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
